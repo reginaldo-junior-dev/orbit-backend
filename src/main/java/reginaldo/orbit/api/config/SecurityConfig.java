@@ -52,7 +52,7 @@ public class SecurityConfig {
         http
                 .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf
-                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                        .csrfTokenRepository(csrfTokenRepository())
                         .csrfTokenRequestHandler(new HeaderOnlyCsrfTokenRequestHandler())
                         .ignoringRequestMatchers("/payments/webhook"))
                 .exceptionHandling(exception -> exception.accessDeniedHandler(customAccessDeniedHandler)
@@ -80,6 +80,14 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 );
         return http.build();
+    }
+
+    private CookieCsrfTokenRepository csrfTokenRepository() {
+        CookieCsrfTokenRepository repository = CookieCsrfTokenRepository.withHttpOnlyFalse();
+        repository.setCookieCustomizer(builder -> builder
+                .secure(cookieSecure)
+                .sameSite(cookieSameSite));
+        return repository;
     }
 
     @Bean
