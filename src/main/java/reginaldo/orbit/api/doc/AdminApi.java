@@ -3,6 +3,8 @@ package reginaldo.orbit.api.doc;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import reginaldo.orbit.api.dto.admin.AdminUpdateUserRequest;
 import reginaldo.orbit.api.dto.admin.AdminUserResponse;
 
 import java.util.List;
@@ -18,4 +20,12 @@ public interface AdminApi {
     @Operation(summary = "Buscar usuário (ADMIN)",
             description = "Busca um usuário por id. Apenas ADMIN (403 para USER). Nunca retorna a senha.")
     ResponseEntity<AdminUserResponse> getUserById(UUID id);
+
+    @Operation(summary = "Editar usuário (ADMIN)",
+            description = "Atualiza nome, email e role de um usuário. Apenas ADMIN. Um admin não pode editar a própria conta por aqui.")
+    ResponseEntity<AdminUserResponse> updateUser(UUID id, AdminUpdateUserRequest request, Authentication authentication);
+
+    @Operation(summary = "Excluir usuário (ADMIN)",
+            description = "Exclui um usuário e todos os seus dados (tarefas, projetos, goals, pagamentos). Apenas ADMIN. Um admin não pode excluir a própria conta por aqui.")
+    ResponseEntity<Void> deleteUser(UUID id, Authentication authentication);
 }

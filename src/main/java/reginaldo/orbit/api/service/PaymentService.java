@@ -21,6 +21,7 @@ import reginaldo.orbit.api.entity.User;
 import reginaldo.orbit.api.enums.BillingCycle;
 import reginaldo.orbit.api.enums.PaymentStatus;
 import reginaldo.orbit.api.enums.PlanType;
+import reginaldo.orbit.api.exception.InvalidPlanException;
 import reginaldo.orbit.api.exception.PaymentGatewayException;
 import reginaldo.orbit.api.exception.PaymentNotFoundException;
 import reginaldo.orbit.api.exception.UserNotFoundException;
@@ -57,6 +58,10 @@ public class PaymentService {
 
     @Transactional
     public PreferenceResponse createPreference(String email, PaymentRequest request) {
+        if (request.plan() == PlanType.STARTER) {
+            throw new InvalidPlanException("Starter is free and does not require checkout");
+        }
+
         User user = getUserByEmail(email);
         BigDecimal amount = resolveAmount(request.plan(), request.billingCycle());
 
@@ -114,10 +119,30 @@ public class PaymentService {
             return;
         }
 
+        PaymentStatus previousStatus = payment.getStatus();
+        PaymentStatus newStatus = mapStatus(mpPayment.getStatus());
+
         payment.setProviderPaymentId(providerPaymentId);
-        payment.setStatus(mapStatus(mpPayment.getStatus()));
+        payment.setStatus(newStatus);
         payment.setUpdatedAt(LocalDateTime.now());
         paymentRepository.save(payment);
+
+        if (newStatus == PaymentStatus.APPROVED && previousStatus != PaymentStatus.APPROVED) {
+            grantPlan(payment);
+        }
+    }
+
+    private void grantPlan(Payment payment) {
+        User user = payment.getUser();
+        boolean samePlanStillActive = user.getPlan() == payment.getPlan()
+                && user.getPlanExpiresAt() != null
+                && user.getPlanExpiresAt().isAfter(LocalDateTime.now());
+        LocalDateTime base = samePlanStillActive ? user.getPlanExpiresAt() : LocalDateTime.now();
+
+        user.setPlan(payment.getPlan());
+        user.setPlanExpiresAt(
+                payment.getBillingCycle() == BillingCycle.ANNUAL ? base.plusYears(1) : base.plusMonths(1));
+        userRepository.save(user);
     }
 
     private Preference createMercadoPagoPreference(Payment payment) {

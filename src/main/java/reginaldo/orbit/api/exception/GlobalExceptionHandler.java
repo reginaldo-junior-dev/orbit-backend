@@ -12,7 +12,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
-import reginaldo.orbit.api.dto.exception.ErroResponse;
+import reginaldo.orbit.api.dto.error.ErroResponse;
 
 import java.util.HashMap;
 import java.util.Map;

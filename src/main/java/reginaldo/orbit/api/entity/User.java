@@ -4,8 +4,10 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import reginaldo.orbit.api.enums.PlanType;
 import reginaldo.orbit.api.enums.Role;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -27,4 +29,11 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     private Role role;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private PlanType plan = PlanType.STARTER;
+
+    @Column(name = "plan_expires_at")
+    private LocalDateTime planExpiresAt;
 }

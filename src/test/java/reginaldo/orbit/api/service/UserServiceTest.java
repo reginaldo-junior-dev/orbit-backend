@@ -16,6 +16,7 @@ import reginaldo.orbit.api.enums.Role;
 import reginaldo.orbit.api.exception.EmailAlreadyExists;
 import reginaldo.orbit.api.exception.InvalidCurrentPasswordException;
 import reginaldo.orbit.api.repository.GoalRepository;
+import reginaldo.orbit.api.repository.PaymentRepository;
 import reginaldo.orbit.api.repository.ProjectRepository;
 import reginaldo.orbit.api.repository.TaskRepository;
 import reginaldo.orbit.api.repository.UserRepository;
@@ -38,6 +39,8 @@ public class UserServiceTest {
     private ProjectRepository projectRepository;
     @Mock
     private GoalRepository goalRepository;
+    @Mock
+    private PaymentRepository paymentRepository;
     @Mock
     private PasswordEncoder passwordEncoder;
 
@@ -111,10 +114,11 @@ public class UserServiceTest {
 
         userService.deleteMe("user@orbit.com");
 
-        InOrder inOrder = inOrder(taskRepository, projectRepository, goalRepository, userRepository);
+        InOrder inOrder = inOrder(taskRepository, projectRepository, goalRepository, paymentRepository, userRepository);
         inOrder.verify(taskRepository).deleteByUserId(userId);
         inOrder.verify(projectRepository).deleteByUserId(userId);
         inOrder.verify(goalRepository).deleteByUserId(userId);
+        inOrder.verify(paymentRepository).deleteByUserId(userId);
         inOrder.verify(userRepository).delete(user);
     }
 }

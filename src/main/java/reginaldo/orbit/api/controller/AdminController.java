@@ -1,12 +1,12 @@
 package reginaldo.orbit.api.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
 import reginaldo.orbit.api.doc.AdminApi;
+import reginaldo.orbit.api.dto.admin.AdminUpdateUserRequest;
 import reginaldo.orbit.api.dto.admin.AdminUserResponse;
 import reginaldo.orbit.api.service.AdminService;
 
@@ -29,5 +29,20 @@ public class AdminController implements AdminApi {
     @Override
     public ResponseEntity<AdminUserResponse> getUserById(@PathVariable UUID id) {
         return ResponseEntity.ok(adminService.getUserById(id));
+    }
+
+    @PutMapping("users/{id}")
+    @Override
+    public ResponseEntity<AdminUserResponse> updateUser(@PathVariable UUID id,
+                                                         @Valid @RequestBody AdminUpdateUserRequest request,
+                                                         Authentication authentication) {
+        return ResponseEntity.ok(adminService.updateUser(id, authentication.getName(), request));
+    }
+
+    @DeleteMapping("users/{id}")
+    @Override
+    public ResponseEntity<Void> deleteUser(@PathVariable UUID id, Authentication authentication) {
+        adminService.deleteUser(id, authentication.getName());
+        return ResponseEntity.noContent().build();
     }
 }

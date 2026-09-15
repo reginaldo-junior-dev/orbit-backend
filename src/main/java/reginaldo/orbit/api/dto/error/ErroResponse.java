@@ -1,4 +1,4 @@
-package reginaldo.orbit.api.dto.exception;
+package reginaldo.orbit.api.dto.error;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 

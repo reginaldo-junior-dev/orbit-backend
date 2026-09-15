@@ -13,8 +13,12 @@ import reginaldo.orbit.api.exception.InvalidCurrentPasswordException;
 import reginaldo.orbit.api.exception.UserNotFoundException;
 import reginaldo.orbit.api.repository.GoalRepository;
 import reginaldo.orbit.api.repository.ProjectRepository;
+import reginaldo.orbit.api.repository.PaymentRepository;
 import reginaldo.orbit.api.repository.TaskRepository;
 import reginaldo.orbit.api.repository.UserRepository;
+import reginaldo.orbit.api.enums.PlanType;
+
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -23,17 +27,12 @@ public class UserService {
     private final TaskRepository taskRepository;
     private final ProjectRepository projectRepository;
     private final GoalRepository goalRepository;
+    private final PaymentRepository paymentRepository;
     private final PasswordEncoder passwordEncoder;
 
     public UserResponse me(String email) {
         User user = getUserByEmail(email);
-
-        return new UserResponse(
-                user.getId(),
-                user.getName(),
-                user.getEmail(),
-                user.getRole()
-        );
+        return toResponse(user);
     }
 
     @Transactional
@@ -49,11 +48,20 @@ public class UserService {
         user.setEmail(newEmail);
         userRepository.save(user);
 
+        return toResponse(user);
+    }
+
+    private UserResponse toResponse(User user) {
+        boolean planActive = user.getPlanExpiresAt() != null
+                && user.getPlanExpiresAt().isAfter(LocalDateTime.now());
+
         return new UserResponse(
                 user.getId(),
                 user.getName(),
                 user.getEmail(),
-                user.getRole()
+                user.getRole(),
+                planActive ? user.getPlan() : PlanType.STARTER,
+                planActive ? user.getPlanExpiresAt() : null
         );
     }
 
@@ -76,6 +84,7 @@ public class UserService {
         taskRepository.deleteByUserId(user.getId());
         projectRepository.deleteByUserId(user.getId());
         goalRepository.deleteByUserId(user.getId());
+        paymentRepository.deleteByUserId(user.getId());
         userRepository.delete(user);
     }
 
