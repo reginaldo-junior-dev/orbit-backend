@@ -1,0 +1,55 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - orbit_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      FRONTEND_ORIGIN: http://localhost:8081
+      COOKIE_SECURE: "false"
+      COOKIE_SAME_SITE: Strict
+      MP_ACCESS_TOKEN: ${MP_ACCESS_TOKEN}
+      MP_WEBHOOK_SECRET: ${MP_WEBHOOK_SECRET}
+      MP_NOTIFICATION_URL: ${MP_NOTIFICATION_URL}
+      DEMO_ADMIN_EMAIL: ${DEMO_ADMIN_EMAIL}
+      DEMO_ADMIN_PASSWORD: ${DEMO_ADMIN_PASSWORD}
+      DEMO_USER_EMAIL: ${DEMO_USER_EMAIL}
+      DEMO_USER_PASSWORD: ${DEMO_USER_PASSWORD}
+    ports:
+      - "127.0.0.1:8080:10000"
+
+  frontend:
+    build:
+      context: ../orbit
+      args:
+        VITE_API_URL: /api
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "8081:80"
+
+volumes:
+  orbit_postgres_data:
